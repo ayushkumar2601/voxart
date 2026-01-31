@@ -1,10 +1,11 @@
 {
   "name": "neon-chaos-contracts",
   "version": "1.0.0",
+  "type": "module",
   "description": "Smart contracts for NEON CHAOS NFT marketplace",
   "scripts": {
     "compile": "hardhat compile",
-    "deploy": "hardhat run scripts/deploy-simple.js --network sepolia",
+    "deploy": "hardhat run scripts/deploy.js --network sepolia",
     "verify": "hardhat verify --network sepolia"
   },
   "devDependencies": {
