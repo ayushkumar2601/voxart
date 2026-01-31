@@ -5,6 +5,7 @@
   "scripts": {
     "compile": "hardhat compile",
     "deploy": "hardhat run scripts/deploy-simple.js --network sepolia",
+    "deploy:marketplace": "hardhat run scripts/deploy-marketplace.js --network sepolia",
     "verify": "hardhat verify --network sepolia"
   },
   "devDependencies": {
