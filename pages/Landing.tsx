@@ -1,18 +1,37 @@
 
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Flame, Zap, Shield, Play } from 'lucide-react';
+import { ArrowRight, Flame, Zap, Shield, Play, RefreshCw } from 'lucide-react';
 import NFTCard from '../components/NFTCard';
-import { MOCK_NFTS } from '../constants';
+import { getTrendingNFTs } from '../lib/services/nftService';
+import type { NFTWithAttributes } from '../lib/supabase/types';
 
 const Landing: React.FC = () => {
   const [scrollPos, setScrollPos] = useState(0);
+  const [trendingNFTs, setTrendingNFTs] = useState<NFTWithAttributes[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const handleScroll = () => setScrollPos(window.scrollY);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  useEffect(() => {
+    fetchTrendingNFTs();
+  }, []);
+
+  const fetchTrendingNFTs = async () => {
+    setIsLoading(true);
+    try {
+      const nfts = await getTrendingNFTs(6);
+      setTrendingNFTs(nfts);
+    } catch (error) {
+      console.error('Error fetching trending NFTs:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className="relative overflow-hidden">
@@ -56,12 +75,16 @@ const Landing: React.FC = () => {
         </div>
 
         {/* Floating Cards Mockup (Parallax effect) */}
-        <div className="hidden lg:block absolute top-40 -left-20 w-64 rotate-[-15deg]" style={{ transform: `translateY(${scrollPos * -0.1}px) rotate(-15deg)` }}>
-          <NFTCard nft={MOCK_NFTS[0]} />
-        </div>
-        <div className="hidden lg:block absolute bottom-0 -right-20 w-64 rotate-[12deg]" style={{ transform: `translateY(${scrollPos * 0.15}px) rotate(12deg)` }}>
-          <NFTCard nft={MOCK_NFTS[2]} />
-        </div>
+        {trendingNFTs.length >= 2 && (
+          <>
+            <div className="hidden lg:block absolute top-40 -left-20 w-64 rotate-[-15deg]" style={{ transform: `translateY(${scrollPos * -0.1}px) rotate(-15deg)` }}>
+              <NFTCard nft={trendingNFTs[0]} />
+            </div>
+            <div className="hidden lg:block absolute bottom-0 -right-20 w-64 rotate-[12deg]" style={{ transform: `translateY(${scrollPos * 0.15}px) rotate(12deg)` }}>
+              <NFTCard nft={trendingNFTs[1]} />
+            </div>
+          </>
+        )}
       </section>
 
       {/* Stats Section */}
@@ -93,11 +116,40 @@ const Landing: React.FC = () => {
           </Link>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {MOCK_NFTS.slice(0, 3).map(nft => (
-            <NFTCard key={nft.id} nft={nft} />
-          ))}
-        </div>
+        {/* Loading State */}
+        {isLoading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="animate-pulse">
+                <div className="aspect-square bg-zinc-900 rounded-2xl mb-4"></div>
+                <div className="h-4 bg-zinc-900 rounded w-3/4 mb-2"></div>
+                <div className="h-3 bg-zinc-900 rounded w-1/2"></div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* NFT Grid */}
+        {!isLoading && trendingNFTs.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {trendingNFTs.map(nft => (
+              <NFTCard key={nft.id} nft={nft} />
+            ))}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoading && trendingNFTs.length === 0 && (
+          <div className="text-center py-16 border-2 border-dashed border-zinc-900 rounded-3xl">
+            <p className="text-zinc-500 font-mono text-sm uppercase mb-4">No NFTs minted yet</p>
+            <Link 
+              to="/mint"
+              className="inline-block px-8 py-3 bg-pink-500 text-white font-black uppercase hover:bg-pink-600 transition-colors"
+            >
+              BE THE FIRST TO MINT
+            </Link>
+          </div>
+        )}
       </section>
 
       {/* Benefits / Features */}

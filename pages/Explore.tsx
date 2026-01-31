@@ -1,36 +1,49 @@
 
-import React, { useState, useMemo } from 'react';
-import { Search, Filter, SlidersHorizontal, Sparkles } from 'lucide-react';
-import { MOCK_NFTS } from '../constants';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Search, Filter, SlidersHorizontal, Sparkles, RefreshCw } from 'lucide-react';
+import { getAllNFTs } from '../lib/services/nftService';
+import type { NFTWithAttributes } from '../lib/supabase/types';
 import NFTCard from '../components/NFTCard';
-import VibeBadge from '../components/VibeBadge';
 
 const Explore: React.FC = () => {
+  const [nfts, setNfts] = useState<NFTWithAttributes[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('All');
-  const [activeVibe, setActiveVibe] = useState<string | null>(null);
-  const [sortOrder, setSortOrder] = useState<'low' | 'high'>('high');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
 
-  const filters = ['All', 'Art', 'Collectibles', 'Gaming', 'Cyberpunk'];
-  const vibes = ['🔥 Chaotic', '🧠 Brainrot', '🕶️ Dark Flex', '💜 Cyber Romantic', '👁️ Glitchcore'];
+  // Fetch NFTs from Supabase
+  useEffect(() => {
+    fetchNFTs();
+  }, [sortOrder]);
 
+  const fetchNFTs = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await getAllNFTs(sortOrder);
+      setNfts(data);
+    } catch (err: any) {
+      console.error('Error fetching NFTs:', err);
+      setError('Failed to load NFTs. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Filter NFTs based on search
   const filteredNFTs = useMemo(() => {
-    let result = MOCK_NFTS.filter(nft => 
-      nft.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-      nft.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      nft.vibeTags?.some(v => v.toLowerCase().includes(searchQuery.toLowerCase()))
+    if (!searchQuery) return nfts;
+
+    return nfts.filter(nft => 
+      nft.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      nft.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      nft.attributes?.some(attr => 
+        attr.trait_type.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        attr.value.toLowerCase().includes(searchQuery.toLowerCase())
+      )
     );
-
-    if (activeFilter !== 'All') {
-      result = result.filter(nft => nft.tags.includes(activeFilter));
-    }
-
-    if (activeVibe) {
-      result = result.filter(nft => nft.vibeTags?.includes(activeVibe));
-    }
-
-    return result.sort((a, b) => sortOrder === 'low' ? a.price - b.price : b.price - a.price);
-  }, [searchQuery, activeFilter, activeVibe, sortOrder]);
+  }, [nfts, searchQuery]);
 
   return (
     <div className="px-6 py-12 max-w-7xl mx-auto">
@@ -49,89 +62,113 @@ const Explore: React.FC = () => {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" size={18} />
             <input 
               type="text" 
-              placeholder="SEARCH BY TITLE, CREATOR, TAGS, VIBES..."
+              placeholder="SEARCH BY NAME, DESCRIPTION, ATTRIBUTES..."
               className="w-full bg-zinc-900/50 border border-zinc-800 rounded-full py-4 pl-12 pr-6 text-xs font-mono outline-none focus:border-pink-500 focus:ring-1 focus:ring-pink-500 transition-all"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {filters.map(f => (
-              <button
-                key={f}
-                onClick={() => setActiveFilter(f)}
-                className={`px-5 py-2 rounded-full text-[10px] font-mono transition-all border ${
-                  activeFilter === f 
-                  ? 'bg-white text-black border-white' 
-                  : 'bg-transparent text-zinc-400 border-zinc-800 hover:border-zinc-500'
-                }`}
-              >
-                {f.toUpperCase()}
-              </button>
-            ))}
-          </div>
-
           <div className="flex gap-4 items-center">
             <div className="flex bg-zinc-900 border border-zinc-800 rounded-lg p-1">
               <button 
-                onClick={() => setSortOrder('high')}
-                className={`p-2 rounded ${sortOrder === 'high' ? 'bg-zinc-800 text-white' : 'text-zinc-500'}`}
+                onClick={() => setSortOrder('newest')}
+                className={`px-4 py-2 rounded text-xs font-mono transition-colors ${
+                  sortOrder === 'newest' ? 'bg-zinc-800 text-white' : 'text-zinc-500'
+                }`}
               >
-                <SlidersHorizontal size={18} />
+                NEWEST
               </button>
               <button 
-                 onClick={() => setSortOrder('low')}
-                 className={`p-2 rounded ${sortOrder === 'low' ? 'bg-zinc-800 text-white' : 'text-zinc-500'}`}
+                onClick={() => setSortOrder('oldest')}
+                className={`px-4 py-2 rounded text-xs font-mono transition-colors ${
+                  sortOrder === 'oldest' ? 'bg-zinc-800 text-white' : 'text-zinc-500'
+                }`}
               >
-                <Filter size={18} />
+                OLDEST
               </button>
             </div>
-          </div>
-        </div>
-
-        {/* Vibe Selector */}
-        <div className="flex flex-wrap gap-3 items-center">
-          <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-widest mr-2">VIBE CHECK:</span>
-          {vibes.map(v => (
-            <VibeBadge 
-              key={v} 
-              label={v} 
-              className={activeVibe === v ? 'scale-110' : 'opacity-40 grayscale hover:opacity-100 hover:grayscale-0'}
-              onClick={() => setActiveVibe(activeVibe === v ? null : v)}
-            />
-          ))}
-          {activeVibe && (
-            <button 
-              onClick={() => setActiveVibe(null)}
-              className="text-[9px] font-mono text-zinc-500 hover:text-white underline underline-offset-4"
+            
+            <button
+              onClick={fetchNFTs}
+              disabled={isLoading}
+              className="p-2 bg-zinc-900 border border-zinc-800 rounded-lg hover:border-pink-500 transition-colors disabled:opacity-50"
+              title="Refresh"
             >
-              CLEAR VIBE
+              <RefreshCw size={18} className={isLoading ? 'animate-spin' : ''} />
             </button>
-          )}
+          </div>
         </div>
       </div>
 
-      {/* Grid */}
-      {filteredNFTs.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredNFTs.map(nft => (
-            <NFTCard key={nft.id} nft={nft} />
-          ))}
-        </div>
-      ) : (
-        <div className="flex flex-col items-center justify-center py-32 border-2 border-dashed border-zinc-900 rounded-3xl">
-          <Sparkles size={48} className="text-zinc-700 mb-4 animate-pulse" />
-          <p className="font-mono text-sm text-zinc-500 uppercase">Nothing found in this reality.</p>
+      {/* Loading State */}
+      {isLoading && (
+        <div className="flex flex-col items-center justify-center py-32">
+          <div className="animate-spin text-pink-500 mb-4">
+            <RefreshCw size={48} />
+          </div>
+          <p className="font-mono text-sm text-zinc-500 uppercase">Loading NFTs...</p>
         </div>
       )}
 
-      {/* Load More */}
-      <div className="mt-12 flex justify-center">
-        <button className="px-12 py-4 border border-zinc-800 text-zinc-400 font-mono text-xs hover:text-white hover:border-white transition-all uppercase">
-          Load More Chaos
-        </button>
-      </div>
+      {/* Error State */}
+      {error && !isLoading && (
+        <div className="flex flex-col items-center justify-center py-32 border-2 border-dashed border-red-900 rounded-3xl">
+          <Sparkles size={48} className="text-red-700 mb-4" />
+          <p className="font-mono text-sm text-red-500 uppercase mb-4">{error}</p>
+          <button
+            onClick={fetchNFTs}
+            className="px-6 py-3 bg-red-500 text-white font-bold uppercase hover:bg-red-600 transition-colors"
+          >
+            TRY AGAIN
+          </button>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!isLoading && !error && filteredNFTs.length === 0 && nfts.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-32 border-2 border-dashed border-zinc-900 rounded-3xl">
+          <Sparkles size={48} className="text-zinc-700 mb-4 animate-pulse" />
+          <p className="font-mono text-sm text-zinc-500 uppercase mb-2">No NFTs minted yet.</p>
+          <p className="font-mono text-xs text-zinc-600 uppercase">Be the first to mint!</p>
+          <a
+            href="/#/mint"
+            className="mt-6 px-8 py-3 bg-pink-500 text-white font-black uppercase hover:bg-pink-600 transition-colors"
+          >
+            MINT NOW
+          </a>
+        </div>
+      )}
+
+      {/* No Search Results */}
+      {!isLoading && !error && filteredNFTs.length === 0 && nfts.length > 0 && (
+        <div className="flex flex-col items-center justify-center py-32 border-2 border-dashed border-zinc-900 rounded-3xl">
+          <Sparkles size={48} className="text-zinc-700 mb-4" />
+          <p className="font-mono text-sm text-zinc-500 uppercase">No results found.</p>
+          <button
+            onClick={() => setSearchQuery('')}
+            className="mt-4 text-xs font-mono text-pink-500 hover:text-pink-400 underline"
+          >
+            CLEAR SEARCH
+          </button>
+        </div>
+      )}
+
+      {/* Grid */}
+      {!isLoading && !error && filteredNFTs.length > 0 && (
+        <>
+          <div className="mb-6 flex justify-between items-center">
+            <p className="text-sm font-mono text-zinc-500">
+              {filteredNFTs.length} NFT{filteredNFTs.length !== 1 ? 'S' : ''} FOUND
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredNFTs.map(nft => (
+              <NFTCard key={nft.id} nft={nft} />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 };
