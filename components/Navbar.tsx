@@ -4,6 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { Menu, X, Wallet, PlusCircle, LayoutGrid, LogOut, AlertCircle } from 'lucide-react';
 import { useWallet, SEPOLIA_CHAIN_ID } from '../contexts/WalletContext';
 import WalletModal from './WalletModal';
+import WalletAddress from './WalletAddress';
 
 const Navbar: React.FC = () => {
   const { walletAddress, walletType, chainId, disconnectWallet } = useWallet();
