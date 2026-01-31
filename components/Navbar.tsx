@@ -107,7 +107,13 @@ const Navbar: React.FC = () => {
                   }`}
                 >
                   <span className="text-base">{getWalletEmoji()}</span>
-                  <span>{shortenAddress(walletAddress)}</span>
+                  {walletAddress && (
+                    <WalletAddress 
+                      address={walletAddress} 
+                      showCopyButton={false}
+                      className="text-emerald-500"
+                    />
+                  )}
                   {isWrongNetwork && <AlertCircle size={14} />}
                 </button>
 
@@ -116,7 +122,14 @@ const Navbar: React.FC = () => {
                     <div className="space-y-3">
                       <div className="pb-3 border-b border-zinc-800">
                         <p className="text-[10px] font-mono text-zinc-500 uppercase mb-1">Connected Wallet</p>
-                        <p className="text-xs font-mono text-white break-all">{walletAddress}</p>
+                        {walletAddress && (
+                          <WalletAddress 
+                            address={walletAddress}
+                            showCopyButton={true}
+                            className="text-xs font-mono text-white"
+                            maxLength={42}
+                          />
+                        )}
                         <p className="text-[10px] font-mono text-zinc-500 mt-1 uppercase">
                           {walletType} {getWalletEmoji()}
                         </p>
@@ -184,7 +197,13 @@ const Navbar: React.FC = () => {
               <div className="space-y-3 pt-3 border-t border-zinc-800">
                 <div className="p-3 bg-emerald-500/10 border border-emerald-500 rounded">
                   <p className="text-[10px] font-mono text-zinc-500 uppercase mb-1">Connected</p>
-                  <p className="text-xs font-mono text-emerald-400">{shortenAddress(walletAddress)}</p>
+                  {walletAddress && (
+                    <WalletAddress 
+                      address={walletAddress}
+                      showCopyButton={true}
+                      className="text-xs font-mono text-emerald-400"
+                    />
+                  )}
                   <p className="text-[10px] font-mono text-zinc-500 mt-1">{walletType} {getWalletEmoji()}</p>
                 </div>
                 <button
