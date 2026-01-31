@@ -13,6 +13,8 @@ import SellNFTModal from '../components/SellNFTModal';
 import BuyNFTModal from '../components/BuyNFTModal';
 import TimeDisplay from '../components/TimeDisplay';
 import WalletAddress from '../components/WalletAddress';
+import SepoliaBadge from '../components/SepoliaBadge';
+import ExplorerLinks from '../components/ExplorerLinks';
 
 const NFTDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -313,9 +315,29 @@ const NFTDetail: React.FC = () => {
         <div className="space-y-8">
           <div className="flex justify-between items-start">
             <div className="flex-1">
-              <h1 className="text-5xl md:text-6xl font-black italic tracking-tighter uppercase leading-none mb-4">
-                {nft.name}
-              </h1>
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <h1 className="text-5xl md:text-6xl font-black italic tracking-tighter uppercase leading-none">
+                  {nft.name}
+                </h1>
+                
+                {/* Explorer Quick Links */}
+                <ExplorerLinks
+                  chainId={nft.chain_id}
+                  txHash={nft.mint_tx_hash}
+                  contractAddress={nft.contract_address}
+                  tokenId={nft.token_id}
+                  iconSize={18}
+                />
+              </div>
+
+              {/* Sepolia Badge */}
+              <div className="mb-6">
+                <SepoliaBadge
+                  chainId={nft.chain_id}
+                  txHash={nft.mint_tx_hash}
+                  contractAddress={nft.contract_address}
+                />
+              </div>
               
               <div className="flex flex-wrap gap-4 items-center mb-6">
                  <div className="flex items-center gap-2">
