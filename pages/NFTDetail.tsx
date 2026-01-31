@@ -11,6 +11,7 @@ import type { NFTWithAttributes, Listing } from '../lib/supabase/types';
 import { useWallet } from '../contexts/WalletContext';
 import SellNFTModal from '../components/SellNFTModal';
 import BuyNFTModal from '../components/BuyNFTModal';
+import TimeDisplay from '../components/TimeDisplay';
 
 const NFTDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -193,11 +194,6 @@ const NFTDetail: React.FC = () => {
   
   const explorerUrl = `https://sepolia.etherscan.io/tx/${nft.mint_tx_hash}`;
   const contractUrl = `https://sepolia.etherscan.io/address/${nft.contract_address}`;
-  const formattedDate = new Date(nft.minted_at).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
 
   return (
     <div className="min-h-screen pt-12 pb-24 px-6 max-w-7xl mx-auto relative">
@@ -274,7 +270,7 @@ const NFTDetail: React.FC = () => {
               
               <div className="flex justify-between">
                 <span className="text-zinc-500">Minted:</span>
-                <span className="text-white">{formattedDate}</span>
+                <TimeDisplay date={nft.minted_at} className="text-white" />
               </div>
               
               <div className="flex justify-between items-center">
