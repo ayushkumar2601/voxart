@@ -14,6 +14,7 @@ const NFTDetail: React.FC = () => {
   const [nft, setNft] = useState<NFTWithAttributes | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -78,7 +79,28 @@ const NFTDetail: React.FC = () => {
     );
   }
 
-  const imageUrl = nft.image_url ? getIPFSGatewayUrl(nft.image_url) : '';
+  // Convert IPFS URI to gateway URL
+  const getImageUrl = () => {
+    if (!nft.image_url) return '';
+    
+    // If already HTTP URL, use as-is
+    if (nft.image_url.startsWith('http://') || nft.image_url.startsWith('https://')) {
+      return nft.image_url;
+    }
+    
+    // Convert IPFS URI to gateway URL
+    const hash = nft.image_url.replace('ipfs://', '');
+    return `https://gateway.pinata.cloud/ipfs/${hash}`;
+  };
+  
+  const imageUrl = getImageUrl();
+  
+  console.log('🖼️ NFT Detail Image:', {
+    name: nft.name,
+    stored: nft.image_url,
+    display: imageUrl
+  });
+  
   const explorerUrl = `https://sepolia.etherscan.io/tx/${nft.mint_tx_hash}`;
   const contractUrl = `https://sepolia.etherscan.io/address/${nft.contract_address}`;
   const formattedDate = new Date(nft.minted_at).toLocaleDateString('en-US', {
@@ -93,13 +115,14 @@ const NFTDetail: React.FC = () => {
         {/* Left: Artwork */}
         <div className="space-y-6">
           <div className="relative group rounded-3xl overflow-hidden neon-border">
-            {imageUrl ? (
+            {imageUrl && !imageError ? (
               <img 
                 src={imageUrl} 
                 alt={nft.name} 
                 className="w-full aspect-square object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = 'https://via.placeholder.com/800x800/1a1a1a/ec4899?text=NFT';
+                onError={() => {
+                  console.error('❌ Image failed to load:', imageUrl);
+                  setImageError(true);
                 }}
               />
             ) : (
@@ -244,7 +267,10 @@ const NFTDetail: React.FC = () => {
                 <Info size={14} /> Metadata
               </h4>
               <a
-                href={getIPFSGatewayUrl(nft.metadata_uri)}
+                href={nft.metadata_uri.startsWith('ipfs://')
+                  ? `https://gateway.pinata.cloud/ipfs/${nft.metadata_uri.replace('ipfs://', '')}`
+                  : nft.metadata_uri
+                }
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs font-mono text-cyan-500 hover:text-cyan-400 flex items-center gap-2 break-all"

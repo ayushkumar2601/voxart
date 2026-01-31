@@ -120,7 +120,7 @@ export async function mintNFT(
       ownerWallet: walletAddress,
       name,
       description: description || null,
-      imageUrl,
+      imageUrl: imageUrl, // Store gateway URL for compatibility
       metadataUri,
       mintTxHash: mintResult.transactionHash,
       mintedAt: new Date(),

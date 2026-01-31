@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { ExternalLink, Calendar, Hash, Network } from 'lucide-react';
 import type { NFTWithAttributes } from '../lib/supabase/types';
-import { getIPFSGatewayUrl } from '../lib/ipfs/pinata';
 
 interface NFTCardProps {
   nft: NFTWithAttributes;
@@ -30,8 +29,27 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
 
   const placeholderImage = 'https://via.placeholder.com/400x400/1a1a1a/ec4899?text=NFT';
   
-  // Convert IPFS URI to HTTP gateway URL
-  const imageUrl = nft.image_url ? getIPFSGatewayUrl(nft.image_url) : placeholderImage;
+  // Convert IPFS URI to gateway URL
+  const getImageUrl = () => {
+    if (!nft.image_url) return placeholderImage;
+    
+    // If already HTTP URL, use as-is
+    if (nft.image_url.startsWith('http://') || nft.image_url.startsWith('https://')) {
+      return nft.image_url;
+    }
+    
+    // Convert IPFS URI to gateway URL
+    const hash = nft.image_url.replace('ipfs://', '');
+    return `https://gateway.pinata.cloud/ipfs/${hash}`;
+  };
+  
+  const imageUrl = getImageUrl();
+  
+  console.log('🖼️ NFT Card Image:', {
+    name: nft.name,
+    stored: nft.image_url,
+    display: imageUrl
+  });
 
   return (
     <div className="group relative bg-zinc-900 border border-zinc-800 hover:border-pink-500 transition-all duration-300 overflow-hidden">
@@ -40,7 +58,10 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
         <img
           src={imageError ? placeholderImage : imageUrl}
           alt={nft.name}
-          onError={() => setImageError(true)}
+          onError={() => {
+            console.error('❌ Image failed to load:', imageUrl);
+            setImageError(true);
+          }}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
         />
         
@@ -135,7 +156,10 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
           {/* View Metadata */}
           {nft.metadata_uri && (
             <a
-              href={getIPFSGatewayUrl(nft.metadata_uri)}
+              href={nft.metadata_uri.startsWith('ipfs://') 
+                ? `https://gateway.pinata.cloud/ipfs/${nft.metadata_uri.replace('ipfs://', '')}`
+                : nft.metadata_uri
+              }
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 bg-zinc-800 hover:bg-violet-500 text-white py-2 px-3 text-xs font-bold uppercase transition-colors"
