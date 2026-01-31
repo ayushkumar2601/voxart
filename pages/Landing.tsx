@@ -94,7 +94,7 @@ const Landing: React.FC = () => {
             { label: 'VOLUME', val: '$240M+' },
             { label: 'ARTISTS', val: '12,000+' },
             { label: 'NFTS', val: '500K+' },
-            { label: 'CHAOS INDEX', val: '98.2%' },
+            { label: 'VIBE INDEX', val: '98.2%' },
           ].map((stat, i) => (
             <div key={i} className="text-center group">
               <p className="text-zinc-500 font-mono text-[10px] mb-1 group-hover:text-pink-500 transition-colors uppercase">{stat.label}</p>
@@ -160,7 +160,7 @@ const Landing: React.FC = () => {
               <Flame size={24} />
             </div>
             <h3 className="text-xl font-black italic uppercase">Hyper-Fluid Market</h3>
-            <p className="text-zinc-500 font-mono text-xs leading-relaxed uppercase">Instant liquidity for high-tier assets using our proprietary chaos-mesh architecture.</p>
+            <p className="text-zinc-500 font-mono text-xs leading-relaxed uppercase">Instant liquidity for high-tier assets using our proprietary voxel-mesh architecture.</p>
           </div>
           <div className="space-y-4 group">
             <div className="w-12 h-12 bg-cyan-500/10 flex items-center justify-center rounded-xl text-cyan-500 group-hover:bg-cyan-500 group-hover:text-black transition-all">

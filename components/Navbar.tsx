@@ -73,7 +73,7 @@ const Navbar: React.FC = () => {
           {/* Logo with Easter Egg */}
           <Link to="/" onClick={handleLogoClick} className="group relative flex items-center space-x-2 select-none">
             <span className={`text-3xl font-black italic tracking-tighter text-white group-hover:text-pink-500 transition-colors ${logoClicks > 0 ? 'animate-pulse' : ''}`}>
-              NEON<span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-violet-500">CHAOS</span>
+              VOX<span className="text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-violet-500">RT</span>
             </span>
             <div className="absolute -bottom-1 left-0 w-0 h-[2px] bg-pink-500 group-hover:w-full transition-all duration-300"></div>
           </Link>

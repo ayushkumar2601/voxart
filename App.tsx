@@ -33,10 +33,10 @@ const App: React.FC = () => {
           <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="space-y-4">
               <h2 className="text-2xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-pink-500 to-violet-500">
-                NEON CHAOS
+                VOXRT
               </h2>
               <p className="text-zinc-500 font-mono text-xs leading-relaxed">
-                THE DIGITAL UNDERGROUND IS HERE. MINT YOUR CHAOS. OWN THE CULTURE. NO RULES, JUST ART.
+                THE DIGITAL UNDERGROUND IS HERE. MINT YOUR CULTURE. OWN THE FUTURE. NO RULES, JUST ART.
               </p>
             </div>
             <div>
@@ -60,7 +60,7 @@ const App: React.FC = () => {
               <div className="flex gap-2">
                 <input 
                   type="text" 
-                  placeholder="EMAIL@CHAOS.COM" 
+                  placeholder="EMAIL@VOXRT.COM" 
                   className="bg-zinc-900 border border-zinc-800 px-4 py-2 text-xs font-mono outline-none focus:border-pink-500 flex-1"
                 />
                 <button className="bg-white text-black font-black px-4 py-2 text-xs hover:bg-pink-500 transition-colors">JOIN</button>
@@ -68,7 +68,7 @@ const App: React.FC = () => {
             </div>
           </div>
           <div className="max-w-7xl mx-auto border-t border-zinc-900 mt-12 pt-8 flex justify-between items-center text-[10px] font-mono text-zinc-600">
-            <p>© 2024 NEON CHAOS STUDIOS. ALL RIGHTS RESERVED.</p>
+            <p>© 2024 VOXRT STUDIOS. ALL RIGHTS RESERVED.</p>
             <div className="flex gap-4">
               <span>PRIVACY</span>
               <span>TERMS</span>

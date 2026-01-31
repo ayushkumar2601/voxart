@@ -125,7 +125,7 @@ const Mint: React.FC = () => {
         </div>
         <h1 className="text-6xl font-black italic uppercase mb-4 tracking-tighter">SUCCESS!</h1>
         <p className="text-zinc-400 font-mono text-sm max-w-md mb-4 uppercase tracking-widest">
-          YOUR CHAOS HAS BEEN RECORDED ON THE BLOCKCHAIN FOREVER. WELCOME TO THE UNDERGROUND.
+          YOUR CREATION HAS BEEN RECORDED ON THE BLOCKCHAIN FOREVER. WELCOME TO THE UNDERGROUND.
         </p>
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-8 max-w-md">
           <p className="text-xs font-mono text-zinc-500 mb-2">TOKEN ID</p>
@@ -163,7 +163,7 @@ const Mint: React.FC = () => {
     <div className="px-6 py-12 max-w-4xl mx-auto">
       <div className="mb-12">
         <h1 className="text-5xl font-black italic uppercase tracking-tighter mb-4">
-          Mint New <span className="text-lime-500">Chaos</span>
+          Mint New <span className="text-lime-500">Art</span>
         </h1>
         <p className="text-zinc-500 font-mono text-xs uppercase">Transform your digital energy into an immutable asset.</p>
       </div>
@@ -357,7 +357,7 @@ const Mint: React.FC = () => {
                 isMinting ? 'bg-zinc-800 text-zinc-500' : 'bg-white text-black hover:bg-lime-500 hover:scale-[1.02]'
               }`}>
                 <span className="inline-block skew-x-[12deg]">
-                  {isMinting ? mintProgress?.message || 'MINTING...' : 'MINT YOUR CHAOS'}
+                  {isMinting ? mintProgress?.message || 'MINTING...' : 'MINT YOUR ART'}
                 </span>
                 {!isMinting && <Zap size={24} fill="currentColor" className="group-hover:animate-pulse" />}
               </div>
