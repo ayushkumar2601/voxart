@@ -3,20 +3,28 @@ import { useParams, Link } from 'react-router-dom';
 import { 
   Heart, Share2, User, Globe, Info, 
   ShieldCheck, Download, 
-  AlertCircle, ExternalLink, RefreshCw
+  AlertCircle, ExternalLink, RefreshCw, DollarSign
 } from 'lucide-react';
 import { getNFTById } from '../lib/services/nftService';
-import type { NFTWithAttributes } from '../lib/supabase/types';
-import { getIPFSGatewayUrl } from '../lib/ipfs/pinata';
+import { getActiveListing, cancelListingService } from '../lib/services/marketplace-service';
+import type { NFTWithAttributes, Listing } from '../lib/supabase/types';
+import { useWallet } from '../contexts/WalletContext';
+import SellNFTModal from '../components/SellNFTModal';
+import BuyNFTModal from '../components/BuyNFTModal';
 
 const NFTDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { wallet, signer } = useWallet();
   const [nft, setNft] = useState<NFTWithAttributes | null>(null);
+  const [listing, setListing] = useState<Listing | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
   const [gatewayIndex, setGatewayIndex] = useState(0);
   const [imageLoading, setImageLoading] = useState(true);
+  const [showSellModal, setShowSellModal] = useState(false);
+  const [showBuyModal, setShowBuyModal] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -33,12 +41,51 @@ const NFTDetail: React.FC = () => {
         setError('NFT not found');
       } else {
         setNft(data);
+        await fetchListing(nftId);
       }
     } catch (err: any) {
       console.error('Error fetching NFT:', err);
       setError('Failed to load NFT');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchListing = async (nftId: string) => {
+    try {
+      const listingData = await getActiveListing(nftId);
+      setListing(listingData);
+    } catch (err) {
+      console.error('Error fetching listing:', err);
+    }
+  };
+
+  const handleCancelListing = async () => {
+    if (!signer || !nft || !listing) return;
+    
+    setIsCancelling(true);
+    try {
+      await cancelListingService(signer, nft.id, nft.token_id, listing.id);
+      await fetchListing(nft.id);
+    } catch (err: any) {
+      console.error('Cancel failed:', err);
+      alert('Failed to cancel listing: ' + err.message);
+    } finally {
+      setIsCancelling(false);
+    }
+  };
+
+  const handleSellSuccess = () => {
+    setShowSellModal(false);
+    if (nft) {
+      fetchListing(nft.id);
+    }
+  };
+
+  const handleBuySuccess = () => {
+    setShowBuyModal(false);
+    if (id) {
+      fetchNFT(id);
     }
   };
 
@@ -297,13 +344,71 @@ const NFTDetail: React.FC = () => {
                 </p>
               )}
             </div>
+          </div>
+
+          {/* Listing Info */}
+          {listing && (
+            <div className="bg-gradient-to-r from-cyan-500/10 to-pink-500/10 border-2 border-cyan-500/50 p-6 rounded-2xl">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-zinc-400 uppercase mb-1 font-mono">Current Price</p>
+                  <div className="flex items-center gap-2">
+                    <DollarSign size={24} className="text-cyan-500" />
+                    <p className="text-3xl font-black text-cyan-500">{listing.price_eth} ETH</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-zinc-400 uppercase mb-1 font-mono">Seller</p>
+                  <p className="text-sm font-mono text-white">
+                    {listing.seller_wallet.slice(0, 6)}...{listing.seller_wallet.slice(-4)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Marketplace Actions */}
+          <div className="space-y-4">
+            {wallet && nft && wallet.address.toLowerCase() === nft.owner_wallet.toLowerCase() ? (
+              // Owner buttons
+              listing ? (
+                <button
+                  onClick={handleCancelListing}
+                  disabled={isCancelling}
+                  className="w-full px-6 py-4 bg-red-500 hover:bg-red-600 text-white font-black uppercase disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  {isCancelling ? 'Cancelling...' : 'Cancel Listing'}
+                </button>
+              ) : (
+                <button
+                  onClick={() => setShowSellModal(true)}
+                  className="w-full px-6 py-4 bg-pink-500 hover:bg-pink-600 text-white font-black uppercase transition-colors"
+                >
+                  List for Sale
+                </button>
+              )
+            ) : listing ? (
+              // Buyer button
+              <button
+                onClick={() => setShowBuyModal(true)}
+                className="w-full px-6 py-4 bg-cyan-500 hover:bg-cyan-600 text-black font-black uppercase transition-colors"
+              >
+                Buy Now - {listing.price_eth} ETH
+              </button>
+            ) : (
+              <div className="w-full px-6 py-4 bg-zinc-900 border border-zinc-800 text-zinc-500 font-black uppercase text-center">
+                Not Listed for Sale
+              </div>
+            )}
             
             <div className="flex gap-2">
-              <button className="p-3 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-pink-500 transition-colors">
+              <button className="flex-1 p-3 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-pink-500 transition-colors flex items-center justify-center gap-2">
                 <Heart size={20} />
+                <span className="text-sm font-mono">Like</span>
               </button>
-              <button className="p-3 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-cyan-500 transition-colors">
-                <Download size={20} />
+              <button className="flex-1 p-3 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-cyan-500 transition-colors flex items-center justify-center gap-2">
+                <Share2 size={20} />
+                <span className="text-sm font-mono">Share</span>
               </button>
             </div>
           </div>
@@ -338,6 +443,31 @@ const NFTDetail: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      {/* Sell Modal */}
+      {showSellModal && nft && (
+        <SellNFTModal
+          nftId={nft.id}
+          tokenId={nft.token_id}
+          nftName={nft.name}
+          onClose={() => setShowSellModal(false)}
+          onSuccess={handleSellSuccess}
+        />
+      )}
+
+      {/* Buy Modal */}
+      {showBuyModal && nft && listing && (
+        <BuyNFTModal
+          nftId={nft.id}
+          tokenId={nft.token_id}
+          listingId={listing.id}
+          nftName={nft.name}
+          priceEth={listing.price_eth}
+          sellerWallet={listing.seller_wallet}
+          onClose={() => setShowBuyModal(false)}
+          onSuccess={handleBuySuccess}
+        />
+      )}
     </div>
   );
 };

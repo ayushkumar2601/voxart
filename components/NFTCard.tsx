@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { ExternalLink, Calendar, Hash, Network } from 'lucide-react';
 import type { NFTWithAttributes } from '../lib/supabase/types';
 
@@ -95,9 +96,10 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
   };
 
   return (
-    <div className="group relative bg-zinc-900 border border-zinc-800 hover:border-pink-500 transition-all duration-300 overflow-hidden">
-      {/* Image */}
-      <div className="relative aspect-square overflow-hidden bg-zinc-950">
+    <Link to={`/nft/${nft.id}`} className="block">
+      <div className="group relative bg-zinc-900 border border-zinc-800 hover:border-pink-500 transition-all duration-300 overflow-hidden cursor-pointer">
+        {/* Image */}
+        <div className="relative aspect-square overflow-hidden bg-zinc-950">
         {/* Loading Spinner */}
         {imageLoading && !imageError && (
           <div className="absolute inset-0 flex items-center justify-center bg-zinc-950">
@@ -195,6 +197,7 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
             href={getExplorerUrl(nft.mint_tx_hash)}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
             className="flex-1 flex items-center justify-center gap-2 bg-zinc-800 hover:bg-pink-500 text-white py-2 px-3 text-xs font-bold uppercase transition-colors"
           >
             <ExternalLink size={14} />
@@ -210,6 +213,7 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
               }
               target="_blank"
               rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
               className="flex items-center justify-center gap-2 bg-zinc-800 hover:bg-violet-500 text-white py-2 px-3 text-xs font-bold uppercase transition-colors"
             >
               <ExternalLink size={14} />
@@ -217,7 +221,8 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </Link>
   );
 };
 
