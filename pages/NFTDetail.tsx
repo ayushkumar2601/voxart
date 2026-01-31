@@ -381,7 +381,7 @@ const NFTDetail: React.FC = () => {
               if (!walletAddress) {
                 return (
                   <div className="w-full px-6 py-4 bg-yellow-500/10 border border-yellow-500 text-yellow-500 font-black uppercase text-center">
-                    Connect Wallet to List
+                    Connect Wallet to Interact
                   </div>
                 );
               }
