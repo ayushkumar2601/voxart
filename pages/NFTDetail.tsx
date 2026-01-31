@@ -15,6 +15,8 @@ const NFTDetail: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [imageError, setImageError] = useState(false);
+  const [gatewayIndex, setGatewayIndex] = useState(0);
+  const [imageLoading, setImageLoading] = useState(true);
 
   useEffect(() => {
     if (id) {
@@ -79,27 +81,68 @@ const NFTDetail: React.FC = () => {
     );
   }
 
+  // Multiple IPFS gateways for fallback (CORS-friendly gateways first)
+  const gateways = [
+    'https://ipfs.io/ipfs/',
+    'https://cloudflare-ipfs.com/ipfs/',
+    'https://dweb.link/ipfs/',
+    'https://gateway.pinata.cloud/ipfs/',
+  ];
+  
   // Convert IPFS URI to gateway URL
   const getImageUrl = () => {
     if (!nft.image_url) return '';
     
-    // If already HTTP URL, use as-is
-    if (nft.image_url.startsWith('http://') || nft.image_url.startsWith('https://')) {
+    // Extract IPFS hash from any format
+    let hash = '';
+    if (nft.image_url.startsWith('ipfs://')) {
+      hash = nft.image_url.replace('ipfs://', '');
+    } else if (nft.image_url.includes('/ipfs/')) {
+      // Extract hash from gateway URL
+      hash = nft.image_url.split('/ipfs/')[1];
+    } else if (nft.image_url.startsWith('http://') || nft.image_url.startsWith('https://')) {
+      // Already a full URL but not IPFS - use as-is
       return nft.image_url;
+    } else {
+      // Assume it's just the hash
+      hash = nft.image_url;
     }
     
-    // Convert IPFS URI to gateway URL
-    const hash = nft.image_url.replace('ipfs://', '');
-    return `https://gateway.pinata.cloud/ipfs/${hash}`;
+    // Use fallback gateway
+    const gateway = gateways[gatewayIndex] || gateways[0];
+    return `${gateway}${hash}`;
   };
   
   const imageUrl = getImageUrl();
   
   console.log('🖼️ NFT Detail Image:', {
     name: nft.name,
+    tokenId: nft.token_id,
     stored: nft.image_url,
-    display: imageUrl
+    display: imageUrl,
+    gateway: gatewayIndex,
+    gatewayUrl: gateways[gatewayIndex]
   });
+  
+  const handleImageError = () => {
+    console.error('❌ Image failed to load:', imageUrl);
+    
+    // Try next gateway
+    if (gatewayIndex < gateways.length - 1) {
+      console.log(`⚠️ Trying gateway ${gatewayIndex + 1}...`);
+      setImageLoading(true);
+      setGatewayIndex(gatewayIndex + 1);
+    } else {
+      console.error('❌ All gateways failed for:', nft.image_url);
+      setImageError(true);
+      setImageLoading(false);
+    }
+  };
+  
+  const handleImageLoad = () => {
+    console.log('✅ Image loaded successfully:', imageUrl);
+    setImageLoading(false);
+  };
   
   const explorerUrl = `https://sepolia.etherscan.io/tx/${nft.mint_tx_hash}`;
   const contractUrl = `https://sepolia.etherscan.io/address/${nft.contract_address}`;
@@ -115,15 +158,20 @@ const NFTDetail: React.FC = () => {
         {/* Left: Artwork */}
         <div className="space-y-6">
           <div className="relative group rounded-3xl overflow-hidden neon-border">
+            {/* Loading Spinner */}
+            {imageLoading && !imageError && (
+              <div className="absolute inset-0 flex items-center justify-center bg-zinc-950 z-10">
+                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-pink-500"></div>
+              </div>
+            )}
+            
             {imageUrl && !imageError ? (
               <img 
                 src={imageUrl} 
                 alt={nft.name} 
-                className="w-full aspect-square object-cover"
-                onError={() => {
-                  console.error('❌ Image failed to load:', imageUrl);
-                  setImageError(true);
-                }}
+                className={`w-full aspect-square object-cover transition-opacity duration-300 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
+                onError={handleImageError}
+                onLoad={handleImageLoad}
               />
             ) : (
               <div className="w-full aspect-square bg-zinc-900 flex items-center justify-center">

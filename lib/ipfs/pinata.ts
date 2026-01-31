@@ -160,7 +160,8 @@ export function getIPFSGatewayUrl(uri: string): string {
     return uri;
   }
   
-  const gateway = import.meta.env.VITE_IPFS_GATEWAY || 'https://gateway.pinata.cloud/ipfs/';
+  // Use ipfs.io as default gateway (better CORS support than Pinata public gateway)
+  const gateway = import.meta.env.VITE_IPFS_GATEWAY || 'https://ipfs.io/ipfs/';
   const hash = uri.replace('ipfs://', '');
   
   // Ensure gateway ends with /

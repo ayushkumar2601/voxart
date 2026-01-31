@@ -71,7 +71,8 @@ export async function mintNFT(
 
     const imageHash = await uploadImageToIPFS(file);
     const imageUri = getIPFSUri(imageHash);
-    const imageUrl = getIPFSGatewayUrl(imageUri);
+    // Use ipfs.io gateway for better CORS support
+    const imageUrl = `https://ipfs.io/ipfs/${imageHash}`;
 
     console.log('✅ Image uploaded:', imageUri);
 

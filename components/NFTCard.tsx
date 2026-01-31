@@ -9,6 +9,8 @@ interface NFTCardProps {
 const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
   const [imageError, setImageError] = useState(false);
   const [showMetadata, setShowMetadata] = useState(false);
+  const [gatewayIndex, setGatewayIndex] = useState(0);
+  const [imageLoading, setImageLoading] = useState(true);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -29,40 +31,86 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
 
   const placeholderImage = 'https://via.placeholder.com/400x400/1a1a1a/ec4899?text=NFT';
   
-  // Convert IPFS URI to gateway URL
+  // Multiple IPFS gateways for fallback (CORS-friendly gateways first)
+  const gateways = [
+    'https://ipfs.io/ipfs/',
+    'https://cloudflare-ipfs.com/ipfs/',
+    'https://dweb.link/ipfs/',
+    'https://gateway.pinata.cloud/ipfs/',
+  ];
+  
+  // Convert IPFS URI to gateway URL with fallback support
   const getImageUrl = () => {
     if (!nft.image_url) return placeholderImage;
     
-    // If already HTTP URL, use as-is
-    if (nft.image_url.startsWith('http://') || nft.image_url.startsWith('https://')) {
+    // Extract IPFS hash from any format
+    let hash = '';
+    if (nft.image_url.startsWith('ipfs://')) {
+      hash = nft.image_url.replace('ipfs://', '');
+    } else if (nft.image_url.includes('/ipfs/')) {
+      // Extract hash from gateway URL
+      hash = nft.image_url.split('/ipfs/')[1];
+    } else if (nft.image_url.startsWith('http://') || nft.image_url.startsWith('https://')) {
+      // Already a full URL but not IPFS - use as-is
       return nft.image_url;
+    } else {
+      // Assume it's just the hash
+      hash = nft.image_url;
     }
     
-    // Convert IPFS URI to gateway URL
-    const hash = nft.image_url.replace('ipfs://', '');
-    return `https://gateway.pinata.cloud/ipfs/${hash}`;
+    // Use fallback gateway
+    const gateway = gateways[gatewayIndex] || gateways[0];
+    return `${gateway}${hash}`;
   };
   
   const imageUrl = getImageUrl();
   
   console.log('🖼️ NFT Card Image:', {
     name: nft.name,
+    tokenId: nft.token_id,
     stored: nft.image_url,
-    display: imageUrl
+    display: imageUrl,
+    gateway: gatewayIndex,
+    gatewayUrl: gateways[gatewayIndex]
   });
+  
+  const handleImageError = () => {
+    console.error('❌ Image failed to load:', imageUrl);
+    
+    // Try next gateway
+    if (gatewayIndex < gateways.length - 1) {
+      console.log(`⚠️ Trying gateway ${gatewayIndex + 1}...`);
+      setImageLoading(true);
+      setGatewayIndex(gatewayIndex + 1);
+    } else {
+      console.error('❌ All gateways failed for:', nft.image_url);
+      setImageError(true);
+      setImageLoading(false);
+    }
+  };
+  
+  const handleImageLoad = () => {
+    console.log('✅ Image loaded successfully:', imageUrl);
+    setImageLoading(false);
+  };
 
   return (
     <div className="group relative bg-zinc-900 border border-zinc-800 hover:border-pink-500 transition-all duration-300 overflow-hidden">
       {/* Image */}
       <div className="relative aspect-square overflow-hidden bg-zinc-950">
+        {/* Loading Spinner */}
+        {imageLoading && !imageError && (
+          <div className="absolute inset-0 flex items-center justify-center bg-zinc-950">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-pink-500"></div>
+          </div>
+        )}
+        
         <img
           src={imageError ? placeholderImage : imageUrl}
           alt={nft.name}
-          onError={() => {
-            console.error('❌ Image failed to load:', imageUrl);
-            setImageError(true);
-          }}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+          onError={handleImageError}
+          onLoad={handleImageLoad}
+          className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ${imageLoading ? 'opacity-0' : 'opacity-100'}`}
         />
         
         {/* Network Badge */}
