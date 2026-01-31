@@ -1,10 +1,14 @@
 
 import React, { useState, useRef } from 'react';
-import { Upload, X, Zap, Sparkles, Info, Heart } from 'lucide-react';
+import { Upload, X, Zap, Sparkles, Info, Heart, AlertCircle, ExternalLink } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
+import { useWallet } from '../contexts/WalletContext';
+import { mintNFT, validateMintingPrerequisites, type MintProgress } from '../lib/services/mint-service';
 import HUDGauge from '../components/HUDGauge';
 
 const Mint: React.FC = () => {
+  const { signer, walletAddress, chainId } = useWallet();
+  
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [title, setTitle] = useState('');
@@ -13,7 +17,15 @@ const Mint: React.FC = () => {
   const [isEstimating, setIsEstimating] = useState(false);
   const [aiSuggestion, setAiSuggestion] = useState<string | null>(null);
   const [aiConfidence, setAiConfidence] = useState<number | null>(null);
-  const [mintStatus, setMintStatus] = useState<'idle' | 'minting' | 'success'>('idle');
+  
+  // Minting state
+  const [isMinting, setIsMinting] = useState(false);
+  const [mintProgress, setMintProgress] = useState<MintProgress | null>(null);
+  const [mintError, setMintError] = useState<string | null>(null);
+  const [mintSuccess, setMintSuccess] = useState<{
+    tokenId: string;
+    transactionHash: string;
+  } | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -58,27 +70,91 @@ const Mint: React.FC = () => {
     }
   };
 
-  const handleMint = () => {
-    setMintStatus('minting');
-    setTimeout(() => setMintStatus('success'), 3000);
+  const handleMint = async () => {
+    if (!signer || !walletAddress) {
+      setMintError('Please connect your wallet first');
+      return;
+    }
+
+    if (!file || !title) {
+      setMintError('Please provide an image and title');
+      return;
+    }
+
+    // Validate prerequisites
+    const validation = await validateMintingPrerequisites(signer);
+    if (!validation.valid) {
+      setMintError(validation.error || 'Validation failed');
+      return;
+    }
+
+    setIsMinting(true);
+    setMintError(null);
+    setMintProgress(null);
+
+    try {
+      const result = await mintNFT(
+        signer,
+        {
+          file,
+          name: title,
+          description,
+        },
+        (progress) => {
+          setMintProgress(progress);
+        }
+      );
+
+      setMintSuccess({
+        tokenId: result.tokenId,
+        transactionHash: result.transactionHash,
+      });
+    } catch (error: any) {
+      console.error('Minting error:', error);
+      setMintError(error.message || 'Minting failed. Please try again.');
+    } finally {
+      setIsMinting(false);
+    }
   };
 
-  if (mintStatus === 'success') {
+  if (mintSuccess) {
     return (
       <div className="min-h-[80vh] flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in duration-500">
         <div className="w-24 h-24 bg-emerald-500 rounded-full flex items-center justify-center mb-8 shadow-[0_0_50px_#10b981]">
           <Zap size={48} className="text-white" fill="currentColor" />
         </div>
         <h1 className="text-6xl font-black italic uppercase mb-4 tracking-tighter">SUCCESS!</h1>
-        <p className="text-zinc-400 font-mono text-sm max-w-md mb-8 uppercase tracking-widest">
+        <p className="text-zinc-400 font-mono text-sm max-w-md mb-4 uppercase tracking-widest">
           YOUR CHAOS HAS BEEN RECORDED ON THE BLOCKCHAIN FOREVER. WELCOME TO THE UNDERGROUND.
         </p>
-        <button 
-          onClick={() => window.location.hash = '#/explore'}
-          className="px-12 py-4 bg-white text-black font-black italic text-lg skew-x-[-12deg] hover:bg-pink-500 hover:text-white transition-all"
-        >
-          <span className="inline-block skew-x-[12deg]">VIEW IN EXPLORE</span>
-        </button>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-8 max-w-md">
+          <p className="text-xs font-mono text-zinc-500 mb-2">TOKEN ID</p>
+          <p className="text-2xl font-black text-pink-500 mb-4">#{mintSuccess.tokenId}</p>
+          <p className="text-xs font-mono text-zinc-500 mb-2">TRANSACTION</p>
+          <a
+            href={`https://sepolia.etherscan.io/tx/${mintSuccess.transactionHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs font-mono text-cyan-500 hover:text-cyan-400 flex items-center gap-2 break-all"
+          >
+            {mintSuccess.transactionHash.slice(0, 20)}...
+            <ExternalLink size={12} />
+          </a>
+        </div>
+        <div className="flex gap-4">
+          <button 
+            onClick={() => window.location.hash = '#/dashboard'}
+            className="px-12 py-4 bg-white text-black font-black italic text-lg skew-x-[-12deg] hover:bg-pink-500 hover:text-white transition-all"
+          >
+            <span className="inline-block skew-x-[12deg]">VIEW IN DASHBOARD</span>
+          </button>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-12 py-4 border-2 border-white text-white font-black italic text-lg skew-x-[-12deg] hover:border-pink-500 transition-all"
+          >
+            <span className="inline-block skew-x-[12deg]">MINT ANOTHER</span>
+          </button>
+        </div>
       </div>
     );
   }
@@ -91,6 +167,66 @@ const Mint: React.FC = () => {
         </h1>
         <p className="text-zinc-500 font-mono text-xs uppercase">Transform your digital energy into an immutable asset.</p>
       </div>
+
+      {/* Wallet Connection Warning */}
+      {!walletAddress && (
+        <div className="mb-8 p-6 bg-yellow-500/10 border-2 border-yellow-500 rounded-2xl flex items-start gap-4">
+          <AlertCircle className="text-yellow-500 flex-shrink-0" size={24} />
+          <div>
+            <h3 className="text-lg font-black text-yellow-500 mb-2">WALLET NOT CONNECTED</h3>
+            <p className="text-sm font-mono text-zinc-400">
+              Connect your MetaMask or Phantom wallet to mint NFTs.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Wrong Network Warning */}
+      {walletAddress && chainId !== 11155111 && (
+        <div className="mb-8 p-6 bg-red-500/10 border-2 border-red-500 rounded-2xl flex items-start gap-4">
+          <AlertCircle className="text-red-500 flex-shrink-0" size={24} />
+          <div>
+            <h3 className="text-lg font-black text-red-500 mb-2">WRONG NETWORK</h3>
+            <p className="text-sm font-mono text-zinc-400">
+              Please switch to Sepolia testnet in your wallet.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Error Display */}
+      {mintError && (
+        <div className="mb-8 p-6 bg-red-500/10 border-2 border-red-500 rounded-2xl flex items-start gap-4">
+          <AlertCircle className="text-red-500 flex-shrink-0" size={24} />
+          <div>
+            <h3 className="text-lg font-black text-red-500 mb-2">MINTING FAILED</h3>
+            <p className="text-sm font-mono text-zinc-400">{mintError}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Progress Display */}
+      {isMinting && mintProgress && (
+        <div className="mb-8 p-6 bg-cyan-500/10 border-2 border-cyan-500 rounded-2xl">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="animate-spin text-cyan-500">
+              <Sparkles size={24} />
+            </div>
+            <div>
+              <h3 className="text-lg font-black text-cyan-500">{mintProgress.message}</h3>
+              <p className="text-xs font-mono text-zinc-400 uppercase">
+                Step {mintProgress.step} - {mintProgress.progress}%
+              </p>
+            </div>
+          </div>
+          <div className="w-full bg-zinc-900 rounded-full h-2 overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-cyan-500 to-pink-500 transition-all duration-500"
+              style={{ width: `${mintProgress.progress}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
         {/* Upload Area */}
@@ -213,22 +349,27 @@ const Mint: React.FC = () => {
 
           <div className="pt-6">
             <button 
-              disabled={!file || !title || mintStatus === 'minting'}
+              disabled={!file || !title || isMinting || !walletAddress || chainId !== 11155111}
               onClick={handleMint}
               className="w-full relative group disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <div className={`py-6 font-black italic text-2xl skew-x-[-12deg] transition-all duration-300 flex items-center justify-center gap-4 border-2 border-transparent ${
-                mintStatus === 'minting' ? 'bg-zinc-800 text-zinc-500' : 'bg-white text-black hover:bg-lime-500 hover:scale-[1.02]'
+                isMinting ? 'bg-zinc-800 text-zinc-500' : 'bg-white text-black hover:bg-lime-500 hover:scale-[1.02]'
               }`}>
                 <span className="inline-block skew-x-[12deg]">
-                  {mintStatus === 'minting' ? 'INITIALIZING CHAOS...' : 'MINT YOUR CHAOS'}
+                  {isMinting ? mintProgress?.message || 'MINTING...' : 'MINT YOUR CHAOS'}
                 </span>
-                {mintStatus !== 'minting' && <Zap size={24} fill="currentColor" className="group-hover:animate-pulse" />}
+                {!isMinting && <Zap size={24} fill="currentColor" className="group-hover:animate-pulse" />}
               </div>
-              {mintStatus === 'minting' && (
-                <div className="absolute inset-0 bg-white/10 opacity-50 animate-glitch skew-x-[-12deg]"></div>
+              {isMinting && (
+                <div className="absolute inset-0 bg-white/10 opacity-50 animate-pulse skew-x-[-12deg]"></div>
               )}
             </button>
+            {!walletAddress && (
+              <p className="text-center text-xs font-mono text-zinc-500 mt-3 uppercase">
+                Connect wallet to mint
+              </p>
+            )}
           </div>
         </div>
       </div>
