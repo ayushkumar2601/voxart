@@ -29,6 +29,7 @@ const NFTDetail: React.FC = () => {
   const [showSellModal, setShowSellModal] = useState(false);
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [cancelOptimistic, setCancelOptimistic] = useState<'idle' | 'cancelling' | 'success'>('idle');
 
   useEffect(() => {
     if (id) {
@@ -67,13 +68,22 @@ const NFTDetail: React.FC = () => {
   const handleCancelListing = async () => {
     if (!signer || !nft || !listing) return;
     
+    // Optimistic UI: Instant visual feedback
+    setCancelOptimistic('cancelling');
     setIsCancelling(true);
     try {
       await cancelListingService(signer, nft.id, nft.token_id, listing.id);
-      await fetchListing(nft.id);
+      
+      // Success animation
+      setCancelOptimistic('success');
+      setTimeout(async () => {
+        await fetchListing(nft.id);
+        setCancelOptimistic('idle');
+      }, 800);
     } catch (err: any) {
       console.error('Cancel failed:', err);
       alert('Failed to cancel listing: ' + err.message);
+      setCancelOptimistic('idle');
     } finally {
       setIsCancelling(false);
     }
@@ -414,16 +424,28 @@ const NFTDetail: React.FC = () => {
                     <button
                       onClick={handleCancelListing}
                       disabled={isCancelling}
-                      className="w-full px-6 py-4 bg-red-500 hover:bg-red-600 text-white font-black uppercase disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className={`w-full px-6 py-4 font-black uppercase disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 ${
+                        cancelOptimistic === 'success'
+                          ? 'bg-emerald-500 text-white scale-105'
+                          : 'bg-red-500 hover:bg-red-600 text-white'
+                      }`}
                     >
-                      {isCancelling ? 'Cancelling...' : 'Cancel Listing'}
+                      {cancelOptimistic === 'success' ? (
+                        <>
+                          <span className="animate-bounce">✓</span> Listing Cancelled!
+                        </>
+                      ) : isCancelling ? (
+                        'Cancelling...'
+                      ) : (
+                        'Cancel Listing'
+                      )}
                     </button>
                   );
                 } else {
                   return (
                     <button
                       onClick={() => setShowSellModal(true)}
-                      className="w-full px-6 py-4 bg-pink-500 hover:bg-pink-600 text-white font-black uppercase transition-colors"
+                      className="w-full px-6 py-4 bg-pink-500 hover:bg-pink-600 text-white font-black uppercase transition-all duration-300 hover:scale-105 active:scale-95"
                     >
                       List for Sale
                     </button>
@@ -434,7 +456,7 @@ const NFTDetail: React.FC = () => {
                 return (
                   <button
                     onClick={() => setShowBuyModal(true)}
-                    className="w-full px-6 py-4 bg-cyan-500 hover:bg-cyan-600 text-black font-black uppercase transition-colors"
+                    className="w-full px-6 py-4 bg-cyan-500 hover:bg-cyan-600 text-black font-black uppercase transition-all duration-300 hover:scale-105 active:scale-95"
                   >
                     Buy Now - {listing.price_eth} ETH
                   </button>

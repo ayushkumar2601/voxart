@@ -30,6 +30,7 @@ const BuyNFTModal: React.FC<BuyNFTModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [gasEstimate, setGasEstimate] = useState<string>('');
   const [totalCost, setTotalCost] = useState<string>('');
+  const [optimisticState, setOptimisticState] = useState<'idle' | 'buying' | 'success'>('idle');
 
   useEffect(() => {
     if (signer) {
@@ -55,16 +56,24 @@ const BuyNFTModal: React.FC<BuyNFTModalProps> = ({
       return;
     }
 
+    // Optimistic UI: Instant visual feedback
+    setOptimisticState('buying');
     setIsBuying(true);
     setError(null);
 
     try {
       await purchaseNFT(signer, nftId, tokenId, listingId, priceEth, sellerWallet);
-      onSuccess();
+      
+      // Success animation
+      setOptimisticState('success');
+      setTimeout(() => {
+        onSuccess();
+      }, 800);
     } catch (err: any) {
       console.error('Purchase failed:', err);
       setError(err.message || 'Failed to purchase NFT');
       setIsBuying(false);
+      setOptimisticState('idle');
     }
   };
 
@@ -126,9 +135,18 @@ const BuyNFTModal: React.FC<BuyNFTModalProps> = ({
           <button
             onClick={handleBuy}
             disabled={isBuying}
-            className="w-full bg-cyan-500 hover:bg-cyan-600 text-black font-black uppercase py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className={`w-full font-black uppercase py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-300 ${
+              optimisticState === 'success' 
+                ? 'bg-emerald-500 text-white scale-105' 
+                : 'bg-cyan-500 hover:bg-cyan-600 text-black'
+            }`}
           >
-            {isBuying ? (
+            {optimisticState === 'success' ? (
+              <>
+                <span className="animate-bounce">✓</span>
+                Purchase Complete!
+              </>
+            ) : isBuying ? (
               <>
                 <Loader className="animate-spin" size={20} />
                 Purchasing...

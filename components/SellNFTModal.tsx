@@ -24,6 +24,7 @@ const SellNFTModal: React.FC<SellNFTModalProps> = ({
   const [isListing, setIsListing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [gasEstimate, setGasEstimate] = useState<string>('');
+  const [optimisticState, setOptimisticState] = useState<'idle' | 'approving' | 'listing' | 'success'>('idle');
 
   const handlePriceChange = async (value: string) => {
     setPrice(value);
@@ -52,16 +53,24 @@ const SellNFTModal: React.FC<SellNFTModalProps> = ({
       return;
     }
 
+    // Optimistic UI: Instant visual feedback
+    setOptimisticState('approving');
     setIsListing(true);
     setError(null);
 
     try {
       await createListing(signer, nftId, tokenId, price);
-      onSuccess();
+      
+      // Success animation
+      setOptimisticState('success');
+      setTimeout(() => {
+        onSuccess();
+      }, 800);
     } catch (err: any) {
       console.error('Listing failed:', err);
       setError(err.message || 'Failed to list NFT');
       setIsListing(false);
+      setOptimisticState('idle');
     }
   };
 
@@ -115,12 +124,21 @@ const SellNFTModal: React.FC<SellNFTModalProps> = ({
           <button
             onClick={handleList}
             disabled={isListing || !price || parseFloat(price) <= 0}
-            className="w-full bg-pink-500 hover:bg-pink-600 text-white font-black uppercase py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className={`w-full font-black uppercase py-3 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all duration-300 ${
+              optimisticState === 'success' 
+                ? 'bg-emerald-500 text-white scale-105' 
+                : 'bg-pink-500 hover:bg-pink-600 text-white'
+            }`}
           >
-            {isListing ? (
+            {optimisticState === 'success' ? (
+              <>
+                <span className="animate-bounce">✓</span>
+                Listed Successfully!
+              </>
+            ) : isListing ? (
               <>
                 <Loader className="animate-spin" size={20} />
-                Listing...
+                {optimisticState === 'approving' ? 'Approving...' : 'Listing...'}
               </>
             ) : (
               'List NFT'
