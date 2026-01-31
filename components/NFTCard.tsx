@@ -96,8 +96,9 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
   };
 
   return (
-    <Link to={`/nft/${nft.id}`} className="block">
-      <div className="group relative bg-zinc-900 border border-zinc-800 hover:border-pink-500 transition-all duration-300 overflow-hidden cursor-pointer">
+    <div className="group relative bg-zinc-900 border border-zinc-800 hover:border-pink-500 transition-all duration-300 overflow-hidden">
+      {/* Clickable area for NFT detail */}
+      <Link to={`/nft/${nft.id}`} className="block cursor-pointer">
         {/* Image */}
         <div className="relative aspect-square overflow-hidden bg-zinc-950">
         {/* Loading Spinner */}
@@ -159,10 +160,14 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
             <span className="font-mono text-white">{formatDate(nft.minted_at)}</span>
           </div>
         </div>
+      </div>
+      </Link>
 
+      {/* Actions - Outside Link to avoid nested anchors */}
+      <div className="px-4 pb-4">
         {/* Attributes */}
         {nft.attributes && nft.attributes.length > 0 && (
-          <div className="pt-3 border-t border-zinc-800">
+          <div className="pt-3 border-t border-zinc-800 mb-3">
             <button
               onClick={() => setShowMetadata(!showMetadata)}
               className="text-xs font-mono text-pink-500 hover:text-pink-400 transition-colors"
@@ -190,14 +195,12 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
           </div>
         )}
 
-        {/* Actions */}
         <div className="pt-3 border-t border-zinc-800 flex gap-2">
           {/* View on Etherscan */}
           <a
             href={getExplorerUrl(nft.mint_tx_hash)}
             target="_blank"
             rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
             className="flex-1 flex items-center justify-center gap-2 bg-zinc-800 hover:bg-pink-500 text-white py-2 px-3 text-xs font-bold uppercase transition-colors"
           >
             <ExternalLink size={14} />
@@ -213,7 +216,6 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
               }
               target="_blank"
               rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
               className="flex items-center justify-center gap-2 bg-zinc-800 hover:bg-violet-500 text-white py-2 px-3 text-xs font-bold uppercase transition-colors"
             >
               <ExternalLink size={14} />
@@ -221,8 +223,7 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
           )}
         </div>
       </div>
-      </div>
-    </Link>
+    </div>
   );
 };
 

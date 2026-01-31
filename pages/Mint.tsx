@@ -1,9 +1,9 @@
 
 import React, { useState, useRef } from 'react';
 import { Upload, X, Zap, Sparkles, Info, Heart, AlertCircle, ExternalLink } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
 import { useWallet } from '../contexts/WalletContext';
 import { mintNFT, validateMintingPrerequisites, type MintProgress } from '../lib/services/mint-service';
+import { getNFTPriceSuggestion } from '../lib/services/aiService';
 import HUDGauge from '../components/HUDGauge';
 
 const Mint: React.FC = () => {
@@ -43,24 +43,13 @@ const Mint: React.FC = () => {
     if (!title) return;
     setIsEstimating(true);
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: `Analyze this NFT metadata and suggest a realistic floor price in ETH for an underground marketplace. 
-                  Title: ${title}
-                  Description: ${description}
-                  Be humorous, use Gen-Z crypto slang, and return a single number as the recommended price followed by a one-sentence vibe-check.`,
-        config: {
-          thinkingConfig: { thinkingBudget: 0 }
-        }
-      });
+      const result = await getNFTPriceSuggestion(title, description);
       
-      const text = response.text || "0.5 | This vibe is immaculate, definitely floor-breaker material.";
-      setAiSuggestion(text);
-      // Try to extract the number
-      const match = text.match(/\d+(\.\d+)?/);
-      if (match) setPrice(match[0]);
-      setAiConfidence(Math.floor(Math.random() * (98 - 85 + 1)) + 85); // Simulated confidence
+      setAiSuggestion(result.text);
+      if (result.extractedPrice) {
+        setPrice(result.extractedPrice);
+      }
+      setAiConfidence(result.confidence);
     } catch (err) {
       console.error("AI Pricing failed:", err);
       setAiSuggestion("1.0 | Our AI servers are fried from too much drip. Just guess it.");

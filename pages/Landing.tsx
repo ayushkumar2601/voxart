@@ -167,7 +167,7 @@ const Landing: React.FC = () => {
               <Zap size={24} />
             </div>
             <h3 className="text-xl font-black italic uppercase">AI Pricing Engine</h3>
-            <p className="text-zinc-500 font-mono text-xs leading-relaxed uppercase">Gemini-powered valuation models that analyze cultural sentiment and visual rarity.</p>
+            <p className="text-zinc-500 font-mono text-xs leading-relaxed uppercase">Grok-powered valuation models that analyze cultural sentiment and visual rarity.</p>
           </div>
           <div className="space-y-4 group">
             <div className="w-12 h-12 bg-lime-500/10 flex items-center justify-center rounded-xl text-lime-500 group-hover:bg-lime-500 group-hover:text-black transition-all">
