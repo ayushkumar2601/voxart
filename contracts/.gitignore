@@ -12,3 +12,6 @@ artifacts
 
 # Deployment info (contains addresses)
 deployment.json
+
+# Backup files
+*.backup
