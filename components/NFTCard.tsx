@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ExternalLink, Calendar, Hash, Network } from 'lucide-react';
 import type { NFTWithAttributes } from '../lib/supabase/types';
+import { getIPFSGatewayUrl } from '../lib/ipfs/pinata';
 
 interface NFTCardProps {
   nft: NFTWithAttributes;
@@ -28,13 +29,16 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
   };
 
   const placeholderImage = 'https://via.placeholder.com/400x400/1a1a1a/ec4899?text=NFT';
+  
+  // Convert IPFS URI to HTTP gateway URL
+  const imageUrl = nft.image_url ? getIPFSGatewayUrl(nft.image_url) : placeholderImage;
 
   return (
     <div className="group relative bg-zinc-900 border border-zinc-800 hover:border-pink-500 transition-all duration-300 overflow-hidden">
       {/* Image */}
       <div className="relative aspect-square overflow-hidden bg-zinc-950">
         <img
-          src={imageError ? placeholderImage : nft.image_url || placeholderImage}
+          src={imageError ? placeholderImage : imageUrl}
           alt={nft.name}
           onError={() => setImageError(true)}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
@@ -131,7 +135,7 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
           {/* View Metadata */}
           {nft.metadata_uri && (
             <a
-              href={nft.metadata_uri}
+              href={getIPFSGatewayUrl(nft.metadata_uri)}
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center justify-center gap-2 bg-zinc-800 hover:bg-violet-500 text-white py-2 px-3 text-xs font-bold uppercase transition-colors"

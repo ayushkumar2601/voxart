@@ -149,13 +149,24 @@ export function getIPFSUri(hash: string): string {
 
 /**
  * Convert IPFS URI to HTTP gateway URL
- * @param uri IPFS URI (ipfs://...)
+ * @param uri IPFS URI (ipfs://...) or already a gateway URL
  * @returns HTTP gateway URL
  */
 export function getIPFSGatewayUrl(uri: string): string {
+  if (!uri) return '';
+  
+  // If already an HTTP URL, return as-is
+  if (uri.startsWith('http://') || uri.startsWith('https://')) {
+    return uri;
+  }
+  
   const gateway = import.meta.env.VITE_IPFS_GATEWAY || 'https://gateway.pinata.cloud/ipfs/';
   const hash = uri.replace('ipfs://', '');
-  return `${gateway}${hash}`;
+  
+  // Ensure gateway ends with /
+  const normalizedGateway = gateway.endsWith('/') ? gateway : `${gateway}/`;
+  
+  return `${normalizedGateway}${hash}`;
 }
 
 /**
