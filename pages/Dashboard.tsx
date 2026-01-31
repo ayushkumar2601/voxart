@@ -3,6 +3,7 @@ import { useWallet } from '../contexts/WalletContext';
 import { useUserNFTs } from '../hooks/useUserNFTs';
 import NFTCard from '../components/NFTCard';
 import EmptyState from '../components/EmptyState';
+import WalletAddress from '../components/WalletAddress';
 import { Wallet, RefreshCw, AlertCircle, Sparkles } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
@@ -91,9 +92,11 @@ const Dashboard: React.FC = () => {
             </h1>
             <div className="flex items-center gap-3 text-sm font-mono">
               <span className="text-zinc-500">WALLET:</span>
-              <span className="text-pink-500">
-                {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-              </span>
+              <WalletAddress 
+                address={walletAddress}
+                showCopyButton={true}
+                className="text-pink-500"
+              />
               <span className="text-zinc-700">|</span>
               <span className="text-zinc-500 uppercase">{walletType}</span>
             </div>
@@ -127,9 +130,11 @@ const Dashboard: React.FC = () => {
             </h1>
             <div className="flex items-center gap-3 text-sm font-mono">
               <span className="text-zinc-500">WALLET:</span>
-              <span className="text-pink-500">
-                {walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}
-              </span>
+              <WalletAddress 
+                address={walletAddress}
+                showCopyButton={true}
+                className="text-pink-500"
+              />
               <span className="text-zinc-700">|</span>
               <span className="text-zinc-500 uppercase">{walletType}</span>
               <span className="text-zinc-700">|</span>

@@ -12,6 +12,7 @@ import { useWallet } from '../contexts/WalletContext';
 import SellNFTModal from '../components/SellNFTModal';
 import BuyNFTModal from '../components/BuyNFTModal';
 import TimeDisplay from '../components/TimeDisplay';
+import WalletAddress from '../components/WalletAddress';
 
 const NFTDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -327,9 +328,11 @@ const NFTDetail: React.FC = () => {
                       <div className="flex items-center gap-1">
                         <p className="text-[10px] text-zinc-500 font-mono">OWNER</p>
                       </div>
-                      <p className="text-xs font-bold text-pink-500 font-mono">
-                        {nft.owner_wallet.slice(0, 6)}...{nft.owner_wallet.slice(-4)}
-                      </p>
+                      <WalletAddress 
+                        address={nft.owner_wallet}
+                        showCopyButton={true}
+                        className="text-xs font-bold text-pink-500 font-mono"
+                      />
                     </div>
                  </div>
               </div>
