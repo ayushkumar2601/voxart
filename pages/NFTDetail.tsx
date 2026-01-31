@@ -14,7 +14,7 @@ import BuyNFTModal from '../components/BuyNFTModal';
 
 const NFTDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { wallet, signer } = useWallet();
+  const { walletAddress, signer } = useWallet();
   const [nft, setNft] = useState<NFTWithAttributes | null>(null);
   const [listing, setListing] = useState<Listing | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -369,37 +369,63 @@ const NFTDetail: React.FC = () => {
 
           {/* Marketplace Actions */}
           <div className="space-y-4">
-            {wallet && nft && wallet.address.toLowerCase() === nft.owner_wallet.toLowerCase() ? (
-              // Owner buttons
-              listing ? (
-                <button
-                  onClick={handleCancelListing}
-                  disabled={isCancelling}
-                  className="w-full px-6 py-4 bg-red-500 hover:bg-red-600 text-white font-black uppercase disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {isCancelling ? 'Cancelling...' : 'Cancel Listing'}
-                </button>
-              ) : (
-                <button
-                  onClick={() => setShowSellModal(true)}
-                  className="w-full px-6 py-4 bg-pink-500 hover:bg-pink-600 text-white font-black uppercase transition-colors"
-                >
-                  List for Sale
-                </button>
-              )
-            ) : listing ? (
-              // Buyer button
-              <button
-                onClick={() => setShowBuyModal(true)}
-                className="w-full px-6 py-4 bg-cyan-500 hover:bg-cyan-600 text-black font-black uppercase transition-colors"
-              >
-                Buy Now - {listing.price_eth} ETH
-              </button>
-            ) : (
-              <div className="w-full px-6 py-4 bg-zinc-900 border border-zinc-800 text-zinc-500 font-black uppercase text-center">
-                Not Listed for Sale
-              </div>
-            )}
+            {(() => {
+              console.log('🔍 Marketplace Debug:', {
+                hasWallet: !!walletAddress,
+                walletAddress: walletAddress,
+                nftOwner: nft?.owner_wallet,
+                match: walletAddress && nft && walletAddress.toLowerCase() === nft.owner_wallet.toLowerCase(),
+                hasListing: !!listing
+              });
+              
+              if (!walletAddress) {
+                return (
+                  <div className="w-full px-6 py-4 bg-yellow-500/10 border border-yellow-500 text-yellow-500 font-black uppercase text-center">
+                    Connect Wallet to List
+                  </div>
+                );
+              }
+              
+              if (walletAddress && nft && walletAddress.toLowerCase() === nft.owner_wallet.toLowerCase()) {
+                // Owner buttons
+                if (listing) {
+                  return (
+                    <button
+                      onClick={handleCancelListing}
+                      disabled={isCancelling}
+                      className="w-full px-6 py-4 bg-red-500 hover:bg-red-600 text-white font-black uppercase disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {isCancelling ? 'Cancelling...' : 'Cancel Listing'}
+                    </button>
+                  );
+                } else {
+                  return (
+                    <button
+                      onClick={() => setShowSellModal(true)}
+                      className="w-full px-6 py-4 bg-pink-500 hover:bg-pink-600 text-white font-black uppercase transition-colors"
+                    >
+                      List for Sale
+                    </button>
+                  );
+                }
+              } else if (listing) {
+                // Buyer button
+                return (
+                  <button
+                    onClick={() => setShowBuyModal(true)}
+                    className="w-full px-6 py-4 bg-cyan-500 hover:bg-cyan-600 text-black font-black uppercase transition-colors"
+                  >
+                    Buy Now - {listing.price_eth} ETH
+                  </button>
+                );
+              } else {
+                return (
+                  <div className="w-full px-6 py-4 bg-zinc-900 border border-zinc-800 text-zinc-500 font-black uppercase text-center">
+                    Not Listed for Sale
+                  </div>
+                );
+              }
+            })()}
             
             <div className="flex gap-2">
               <button className="flex-1 p-3 rounded-2xl bg-zinc-900 border border-zinc-800 hover:border-pink-500 transition-colors flex items-center justify-center gap-2">

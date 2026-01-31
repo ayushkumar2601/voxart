@@ -207,9 +207,9 @@ export async function getActiveListing(nftId: string) {
     .select('*')
     .eq('nft_id', nftId)
     .eq('status', 'active')
-    .single();
+    .maybeSingle();
 
-  if (error && error.code !== 'PGRST116') {
+  if (error) {
     console.error('Error fetching listing:', error);
     return null;
   }
