@@ -2,6 +2,7 @@ import React from 'react';
 import { useWallet } from '../contexts/WalletContext';
 import { useUserNFTs } from '../hooks/useUserNFTs';
 import NFTCard from '../components/NFTCard';
+import EmptyState from '../components/EmptyState';
 import { Wallet, RefreshCw, AlertCircle, Sparkles } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
@@ -99,23 +100,13 @@ const Dashboard: React.FC = () => {
           </div>
 
           {/* Empty State */}
-          <div className="flex flex-col items-center justify-center min-h-[50vh] text-center">
-            <div className="w-20 h-20 rounded-full bg-zinc-900 border-2 border-zinc-800 flex items-center justify-center mb-6">
-              <Sparkles size={32} className="text-zinc-600" />
-            </div>
-            <h2 className="text-3xl font-black text-white mb-3">
-              NO NFTS YET
-            </h2>
-            <p className="text-zinc-400 font-mono text-sm max-w-md mb-6">
-              Your collection is empty. Start minting NFTs to see them here!
-            </p>
-            <a
-              href="/#/mint"
-              className="bg-gradient-to-r from-pink-500 to-violet-500 text-white px-8 py-3 font-black uppercase hover:shadow-[0_0_20px_rgba(236,72,153,0.5)] transition-all"
-            >
-              MINT YOUR FIRST NFT
-            </a>
-          </div>
+          <EmptyState
+            icon="sparkles"
+            title="No NFTs yet — mint your first Voxrt asset 🚀"
+            description="Your collection is empty. Start minting NFTs to see them here!"
+            primaryAction={{ label: 'Mint NFT', to: '/mint' }}
+            secondaryAction={{ label: 'Explore NFTs', to: '/explore' }}
+          />
         </div>
       </div>
     );

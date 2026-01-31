@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, Calendar, Hash, Network } from 'lucide-react';
 import type { NFTWithAttributes } from '../lib/supabase/types';
+import TimeDisplay from './TimeDisplay';
 
 interface NFTCardProps {
   nft: NFTWithAttributes;
@@ -13,14 +14,7 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
   const [gatewayIndex, setGatewayIndex] = useState(0);
   const [imageLoading, setImageLoading] = useState(true);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
+
 
   const getNetworkName = (chainId: number) => {
     return chainId === 11155111 ? 'Sepolia' : `Chain ${chainId}`;
@@ -157,7 +151,7 @@ const NFTCard: React.FC<NFTCardProps> = ({ nft }) => {
           <div className="flex items-center gap-2 text-xs">
             <Calendar size={14} className="text-zinc-500" />
             <span className="font-mono text-zinc-400">Minted:</span>
-            <span className="font-mono text-white">{formatDate(nft.minted_at)}</span>
+            <TimeDisplay date={nft.minted_at} className="font-mono text-white" />
           </div>
         </div>
       </div>

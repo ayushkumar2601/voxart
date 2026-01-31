@@ -4,6 +4,7 @@ import { Search, Filter, SlidersHorizontal, Sparkles, RefreshCw } from 'lucide-r
 import { getAllNFTs } from '../lib/services/nftService';
 import type { NFTWithAttributes } from '../lib/supabase/types';
 import NFTCard from '../components/NFTCard';
+import EmptyState from '../components/EmptyState';
 
 const Explore: React.FC = () => {
   const [nfts, setNfts] = useState<NFTWithAttributes[]>([]);
@@ -127,31 +128,24 @@ const Explore: React.FC = () => {
 
       {/* Empty State */}
       {!isLoading && !error && filteredNFTs.length === 0 && nfts.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-32 border-2 border-dashed border-zinc-900 rounded-3xl">
-          <Sparkles size={48} className="text-zinc-700 mb-4 animate-pulse" />
-          <p className="font-mono text-sm text-zinc-500 uppercase mb-2">No NFTs minted yet.</p>
-          <p className="font-mono text-xs text-zinc-600 uppercase">Be the first to mint!</p>
-          <a
-            href="/#/mint"
-            className="mt-6 px-8 py-3 bg-pink-500 text-white font-black uppercase hover:bg-pink-600 transition-colors"
-          >
-            MINT NOW
-          </a>
-        </div>
+        <EmptyState
+          icon="sparkles"
+          title="No NFTs yet — mint your first Voxrt asset 🚀"
+          description="The marketplace is waiting for creators like you. Be the first to mint!"
+          primaryAction={{ label: 'Mint NFT', to: '/mint' }}
+          secondaryAction={{ label: 'Refresh', to: '/explore' }}
+        />
       )}
 
       {/* No Search Results */}
       {!isLoading && !error && filteredNFTs.length === 0 && nfts.length > 0 && (
-        <div className="flex flex-col items-center justify-center py-32 border-2 border-dashed border-zinc-900 rounded-3xl">
-          <Sparkles size={48} className="text-zinc-700 mb-4" />
-          <p className="font-mono text-sm text-zinc-500 uppercase">No results found.</p>
-          <button
-            onClick={() => setSearchQuery('')}
-            className="mt-4 text-xs font-mono text-pink-500 hover:text-pink-400 underline"
-          >
-            CLEAR SEARCH
-          </button>
-        </div>
+        <EmptyState
+          icon="search"
+          title="No results found"
+          description={`No NFTs match "${searchQuery}". Try a different search term.`}
+          primaryAction={{ label: 'Clear Search', to: '/explore' }}
+          secondaryAction={{ label: 'Mint NFT', to: '/mint' }}
+        />
       )}
 
       {/* Grid */}
