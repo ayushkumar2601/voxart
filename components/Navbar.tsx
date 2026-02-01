@@ -44,7 +44,13 @@ const Navbar: React.FC = () => {
   }, [showWalletDropdown]);
 
   const handleLogoClick = (e: React.MouseEvent) => {
-    e.preventDefault();
+    // Clear last visited page when clicking logo
+    try {
+      localStorage.removeItem('voxrt_last_page');
+    } catch (error) {
+      // Silently fail
+    }
+    
     const newCount = logoClicks + 1;
     setLogoClicks(newCount);
     

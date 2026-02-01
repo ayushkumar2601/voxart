@@ -8,23 +8,36 @@ import Mint from './pages/Mint';
 import Dashboard from './pages/Dashboard';
 import Navbar from './components/Navbar';
 import ActivityFeed from './components/ActivityFeed';
-import { WalletProvider } from './contexts/WalletContext';
+import { WalletProvider, useWallet } from './contexts/WalletContext';
 import { useLastVisitedPage } from './hooks/useLastVisitedPage';
 
 const AppContent: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { walletAddress } = useWallet();
   const { restoreLastPage } = useLastVisitedPage();
 
-  // Restore last visited page on initial load (only if on landing page)
+  // Restore last visited page on initial load (only if wallet is connected and on landing page)
   useEffect(() => {
-    if (location.pathname === '/') {
+    if (location.pathname === '/' && walletAddress) {
       // Small delay to ensure router is ready
       const timer = setTimeout(() => {
         restoreLastPage();
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [walletAddress]);
+
+  // Redirect to landing page when wallet disconnects (except if already on landing)
+  useEffect(() => {
+    if (!walletAddress && location.pathname !== '/') {
+      // Check if user is on a protected page
+      const protectedPages = ['/dashboard', '/mint'];
+      if (protectedPages.some(page => location.pathname.startsWith(page))) {
+        navigate('/');
+      }
+    }
+  }, [walletAddress, location.pathname, navigate]);
 
   return (
     <>
