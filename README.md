@@ -198,7 +198,7 @@ MIT License - feel free to use this project however you'd like!
 
 ## 🎉 Credits
 
-Built with ❤️ using AI Studio and powered by Gemini AI.
+Built with ❤️ by Ayush
 
 ---
 
