@@ -7,16 +7,9 @@ const ActivityFeed: React.FC = () => {
   const [isVisible, setIsVisible] = useState(true);
   const [events, setEvents] = useState(MOCK_ACTIVITY);
 
-  // Sound effects
-  const playClick = () => {
-    const audio = new Audio('https://www.soundjay.com/buttons/sounds/button-20.mp3');
-    audio.volume = 0.05;
-    audio.play().catch(() => {});
-  };
-
   if (!isVisible) return (
     <button 
-      onClick={() => { setIsVisible(true); playClick(); }}
+      onClick={() => setIsVisible(true)}
       className="fixed bottom-6 right-6 z-[200] w-12 h-12 bg-zinc-900 border border-white/10 rounded-full flex items-center justify-center text-pink-500 hover:scale-110 transition-all shadow-[0_0_20px_rgba(236,72,153,0.3)]"
     >
       <Activity size={20} />
@@ -36,7 +29,7 @@ const ActivityFeed: React.FC = () => {
             <span className="text-[7px] font-mono uppercase">On-chain Visualizer</span>
           </div>
         </div>
-        <button onClick={() => { setIsVisible(false); playClick(); }} className="text-zinc-500 hover:text-white">
+        <button onClick={() => setIsVisible(false)} className="text-zinc-500 hover:text-white">
           <X size={14} />
         </button>
       </div>
